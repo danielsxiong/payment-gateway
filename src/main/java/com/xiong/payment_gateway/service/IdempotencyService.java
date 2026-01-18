@@ -1,4 +1,4 @@
-package com.xiong.payment_gateway.repository;
+package com.xiong.payment_gateway.service;
 
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;

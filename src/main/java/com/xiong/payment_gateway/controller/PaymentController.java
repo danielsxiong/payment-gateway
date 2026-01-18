@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 
 import com.xiong.payment_gateway.dto.PaymentRequest;
 import com.xiong.payment_gateway.dto.PaymentResponse;
+import com.xiong.payment_gateway.models.PaymentTransaction;
 import com.xiong.payment_gateway.service.PaymentService;
 
 @RestController
@@ -26,7 +27,9 @@ public class PaymentController {
     }
 
     @GetMapping("/{transactionId}")
-    public ResponseEntity<?> getPayment(@PathVariable String transactionId) {
+    public ResponseEntity<PaymentTransaction> getPayment(
+        @PathVariable("transactionId") String transactionId
+    ) {
         return ResponseEntity.ok(paymentService.getTransaction(transactionId));
     }
 }

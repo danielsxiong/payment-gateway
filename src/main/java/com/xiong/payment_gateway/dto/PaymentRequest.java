@@ -29,5 +29,5 @@ public class PaymentRequest {
     @Pattern(regexp = "^https?://.*", message = "Webhook URL must be valid")
     private String webhookUrl;
 
-    private String metadata;
+    private Object metadata;
 }

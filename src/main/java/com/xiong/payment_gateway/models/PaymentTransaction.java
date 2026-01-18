@@ -1,6 +1,9 @@
 package com.xiong.payment_gateway.models;
 
 import jakarta.persistence.*;
+
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -33,8 +36,9 @@ public class PaymentTransaction {
 
     private String paymentMethod;
 
-    @Column(columnDefinition = "TEXT")
-    private String metadata;
+    // @JdbcTypeCode(SqlTypes.JSON)
+    // @Column(columnDefinition = "jsonb")
+    // private Object metadata;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
