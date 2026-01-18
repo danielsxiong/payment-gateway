@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: payment-gateway
+  datasource:
+    url: jdbc:postgresql://localhost:5432/payment_gateway
+    username: postgres
+    password: postgres
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+server:
+  port: 8080
+
+payment:
+  webhook:
+    retry-max-attempts: 3
+    retry-delay-seconds: 60
