@@ -7,7 +7,7 @@ import com.xiong.payment_gateway.models.WebhookStatus;
 import com.xiong.payment_gateway.repository.WebhookRepository;
 
 import lombok.extern.slf4j.Slf4j;
-import tools.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;

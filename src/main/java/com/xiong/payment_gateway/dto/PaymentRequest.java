@@ -3,6 +3,7 @@ package com.xiong.payment_gateway.dto;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 import java.math.BigDecimal;
+import java.util.Map;
 
 @Data
 public class PaymentRequest {
@@ -29,5 +30,5 @@ public class PaymentRequest {
     @Pattern(regexp = "^https?://.*", message = "Webhook URL must be valid")
     private String webhookUrl;
 
-    private Object metadata;
+    private Map<String, Object> metadata;
 }

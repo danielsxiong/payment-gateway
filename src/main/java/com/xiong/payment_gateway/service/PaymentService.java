@@ -49,7 +49,7 @@ public class PaymentService {
         transaction.setIdempotencyKey(request.getIdempotencyKey());
         transaction.setCustomerId(request.getCustomerId());
         transaction.setPaymentMethod(request.getPaymentMethod());
-        // transaction.setMetadata(request.getMetadata());
+        transaction.setMetadata(request.getMetadata());
         transaction.setStatus(TransactionStatus.PROCESSING);
 
         // Save transaction
