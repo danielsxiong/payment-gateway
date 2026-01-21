@@ -1,10 +1,13 @@
 package com.xiong.payment_gateway.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.xiong.payment_gateway.dto.RefundRequest;
+import com.xiong.payment_gateway.exception.PaymentGatewayException;
+import com.xiong.payment_gateway.exception.ResourceNotFoundException;
 import com.xiong.payment_gateway.models.PaymentTransaction;
 import com.xiong.payment_gateway.models.Refund;
 import com.xiong.payment_gateway.models.RefundStatus;
@@ -36,11 +39,24 @@ public class RefundService {
     public Refund processRefund(RefundRequest request) {
         PaymentTransaction transaction = paymentRepository
             .findById(request.getTransactionId())
-            .orElseThrow(() -> new RuntimeException("Transaction not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("PaymentTransaction", "id", request.getTransactionId()));
 
         if (transaction.getStatus() != TransactionStatus.SUCCESS &&
             transaction.getStatus() != TransactionStatus.PARTIAL_REFUND) {
-            throw new RuntimeException("Transaction cannot be refunded");
+            throw new PaymentGatewayException(
+                "Transaction cannot be refunded. Current status: " + transaction.getStatus(),
+                HttpStatus.BAD_REQUEST,
+                "INVALID_TRANSACTION_STATUS"
+            );
+        }
+
+        // Validate refund amount
+        if (request.getAmount() == null || request.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new PaymentGatewayException(
+                "Refund amount must be greater than zero",
+                HttpStatus.BAD_REQUEST,
+                "INVALID_REFUND_AMOUNT"
+            );
         }
 
         // Calculate total refunded amount
@@ -54,7 +70,12 @@ public class RefundService {
         BigDecimal remainingAmount = transaction.getAmount().subtract(totalRefunded);
         
         if (request.getAmount().compareTo(remainingAmount) > 0) {
-            throw new RuntimeException("Refund amount exceeds remaining amount");
+            throw new PaymentGatewayException(
+                String.format("Refund amount exceeds remaining amount. Requested: %s, Available: %s", 
+                    request.getAmount(), remainingAmount),
+                HttpStatus.BAD_REQUEST,
+                "REFUND_AMOUNT_EXCEEDS_BALANCE"
+            );
         }
 
         // Create refund

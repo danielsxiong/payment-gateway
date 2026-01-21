@@ -1,6 +1,7 @@
 package com.xiong.payment_gateway.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.*;
@@ -21,8 +22,24 @@ public class WebhookTestController {
     private static final List<Map<String, Object>> webhookHistory = Collections.synchronizedList(new ArrayList<>());
     private static final int MAX_HISTORY = 50;
 
+    /**
+     * Receive webhook events from the payment gateway
+     * 
+     * @param payload the webhook payload as JSON string
+     * @return confirmation of webhook receipt
+     */
     @PostMapping("/test")
     public ResponseEntity<?> receiveWebhook(@RequestBody String payload) {
+        if (payload == null || payload.isEmpty()) {
+            log.warn("Empty webhook payload received");
+            return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(Map.of(
+                    "status", "error",
+                    "message", "Webhook payload cannot be empty"
+                ));
+        }
+
         log.info("Webhook received: {}", payload);
         
         // Store in history
@@ -37,12 +54,19 @@ public class WebhookTestController {
             webhookHistory.remove(webhookHistory.size() - 1);
         }
         
-        return ResponseEntity.ok(Map.of(
-            "status", "received",
-            "message", "Webhook received successfully"
-        ));
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(Map.of(
+                "status", "received",
+                "message", "Webhook received successfully"
+            ));
     }
 
+    /**
+     * Retrieve webhook history
+     * 
+     * @return list of received webhook events
+     */
     @GetMapping("/test/history")
     public ResponseEntity<?> getWebhookHistory() {
         return ResponseEntity.ok(Map.of(
@@ -51,12 +75,16 @@ public class WebhookTestController {
         ));
     }
 
+    /**
+     * Clear webhook history
+     * 
+     * @return confirmation of history cleared
+     */
     @DeleteMapping("/test/history")
     public ResponseEntity<?> clearWebhookHistory() {
         webhookHistory.clear();
-        return ResponseEntity.ok(Map.of(
-            "status", "cleared",
-            "message", "Webhook history cleared"
-        ));
+        return ResponseEntity
+            .status(HttpStatus.NO_CONTENT)
+            .build();
     }
 }

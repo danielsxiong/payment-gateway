@@ -1,11 +1,14 @@
 package com.xiong.payment_gateway.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.xiong.payment_gateway.dto.ApiResponse;
 import com.xiong.payment_gateway.dto.PaymentRequest;
 import com.xiong.payment_gateway.dto.PaymentResponse;
+import com.xiong.payment_gateway.exception.ResourceNotFoundException;
 import com.xiong.payment_gateway.models.PaymentTransaction;
 import com.xiong.payment_gateway.models.TransactionStatus;
 import com.xiong.payment_gateway.repository.PaymentRepository;
@@ -28,17 +31,26 @@ public class PaymentService {
     }
 
     @Transactional
-    public PaymentResponse processPayment(PaymentRequest request) {
+    public ApiResponse<PaymentResponse> processPayment(PaymentRequest request) {
         // Check idempotency
         if (idempotencyService.isProcessed(request.getIdempotencyKey())) {
             String existingTxnId = idempotencyService.getTransactionId(
                 request.getIdempotencyKey()
             );
             PaymentTransaction existing = paymentRepository.findById(existingTxnId)
-                .orElseThrow(() -> new RuntimeException("Transaction not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("PaymentTransaction", "id", existingTxnId));
             
-            log.info("Returning existing transaction: {}", existingTxnId);
-            return buildResponse(existing, "Duplicate request - returning existing transaction");
+            log.info("Returning existing transaction for idempotency key: {}, transaction: {}", 
+                request.getIdempotencyKey(), existingTxnId);
+            
+            // Return 409 CONFLICT for duplicate (idempotent) request
+            PaymentResponse response = buildResponse(existing, "Duplicate request - returning existing transaction");
+            return ApiResponse.<PaymentResponse>builder()
+                .data(response)
+                .statusCode(HttpStatus.CONFLICT)
+                .message("Duplicate request detected - returning existing transaction")
+                .isDuplicate(true)
+                .build();
         }
 
         // Create transaction
@@ -77,7 +89,14 @@ public class PaymentService {
         // Send webhook asynchronously
         webhookService.sendWebhook(transaction, request.getWebhookUrl());
 
-        return buildResponse(transaction, "Payment processed successfully");
+        // Return 201 CREATED for new payment
+        PaymentResponse response = buildResponse(transaction, "Payment processed successfully");
+        return ApiResponse.<PaymentResponse>builder()
+            .data(response)
+            .statusCode(HttpStatus.CREATED)
+            .message("Payment created successfully")
+            .isDuplicate(false)
+            .build();
     }
 
     private boolean processWithPaymentProvider(PaymentTransaction transaction) {
@@ -99,6 +118,6 @@ public class PaymentService {
 
     public PaymentTransaction getTransaction(String transactionId) {
         return paymentRepository.findById(transactionId)
-            .orElseThrow(() -> new RuntimeException("Transaction not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("PaymentTransaction", "id", transactionId));
     }
 }
