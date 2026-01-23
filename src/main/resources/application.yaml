@@ -17,7 +17,10 @@ spring:
 server:
   port: 8080
 
-payment:
-  webhook:
-    retry-max-attempts: 3
-    retry-delay-seconds: 60
+grpc:
+  server:
+    port: 9090
+    enable-keep-alive: true
+    keep-alive-time: 30s
+    keep-alive-timeout: 10s
+

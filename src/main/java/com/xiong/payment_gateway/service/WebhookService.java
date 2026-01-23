@@ -34,6 +34,17 @@ public class WebhookService {
     @Async
     public void sendWebhook(PaymentTransaction transaction, String webhookUrl) {
         try {
+            if (webhookUrl == null || webhookUrl.trim().isEmpty()) {
+                log.warn("No webhook URL provided for transaction {}", transaction.getId());
+                return;
+            }
+
+            // Ensure URI is absolute by adding protocol if missing
+            webhookUrl = webhookUrl.trim();
+            if (!webhookUrl.startsWith("http://") && !webhookUrl.startsWith("https://")) {
+                webhookUrl = "http://" + webhookUrl;
+            }
+
             Map<String, Object> payload = new HashMap<>();
             payload.put("event_type", "payment.completed");
             payload.put("transaction_id", transaction.getId());

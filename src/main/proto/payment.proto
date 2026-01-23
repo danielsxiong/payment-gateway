@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.xiong.payment_gateway.grpc";
+option java_outer_classname = "PaymentProto";
+
+package com.xiong.payment_gateway.grpc;
+
+import "google/protobuf/timestamp.proto";
+
+message PaymentRequest {
+  string merchant_id = 1;
+  string amount = 2;
+  string currency = 3;
+  string idempotency_key = 4;
+  string customer_id = 5;
+  string payment_method = 6;
+  string webhook_url = 7;
+  map<string, string> metadata = 8;
+}
+
+message PaymentResponse {
+  string transaction_id = 1;
+  string status = 2;
+  string amount = 3;
+  string currency = 4;
+  google.protobuf.Timestamp created_at = 5;
+  string message = 6;
+}
+
+message GetPaymentRequest {
+  string transaction_id = 1;
+}
+
+message PaymentTransaction {
+  string id = 1;
+  string merchant_id = 2;
+  string amount = 3;
+  string currency = 4;
+  string status = 5;
+  string idempotency_key = 6;
+  string customer_id = 7;
+  string payment_method = 8;
+  map<string, string> metadata = 9;
+  google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp updated_at = 11;
+}
+
+service PaymentService {
+  rpc CreatePayment(PaymentRequest) returns (PaymentResponse);
+  rpc GetPayment(GetPaymentRequest) returns (PaymentTransaction);
+}
